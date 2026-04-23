@@ -36,7 +36,7 @@ export default function LoginPage() {
           <div className="flex flex-col items-center mb-10">
             <div className="w-20 h-20 bg-white rounded-2xl shadow-xl shadow-blue-500/10 flex items-center justify-center p-3 mb-6 animate-bounce-slow">
               <img
-                src="/logo.jpeg"
+                src="/Logo.jpeg"
                 alt="HMBD"
                 className="w-full h-full object-contain"
                 onError={(e) => {

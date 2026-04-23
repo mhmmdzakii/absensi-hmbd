@@ -69,7 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-6 flex items-center justify-between border-b border-slate-100">
           <div className="flex items-center gap-3">
             <img 
-              src="/logo.png" 
+              src="/Logo.jpeg" 
               alt="Logo" 
               className="w-8 h-8 object-contain drop-shadow-sm" 
               onError={(e) => e.currentTarget.src = 'https://api.dicebear.com/7.x/initials/svg?seed=HMBD&backgroundColor=2563eb'} 
