@@ -1,0 +1,21 @@
+{
+  "name": "Absensi HMBD",
+  "short_name": "HMBD",
+  "description": "Aplikasi Absensi & Piket Harian HMBD",
+  "start_url": "/absen",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
