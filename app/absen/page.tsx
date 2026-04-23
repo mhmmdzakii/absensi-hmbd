@@ -8,6 +8,13 @@ import { getDistanceInMeters } from '@/utils/haversine'
 import { MapPin, ScanFace, CalendarCheck, Clock, Navigation, UserCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
+// --- DAFTAR EMAIL ADMIN (BISA MENEMBUS BLOKIR LAPTOP) ---
+const ADMIN_EMAILS = [
+  'saturnusno6@gmail.com', 
+  'admin2@gmail.com', // Ganti dengan email admin tambahan
+  'admin3@gmail.com'  // Tambahkan lagi jika perlu
+]
+
 // --- DATA MASTER PENGURUS HMBD ---
 const DEPARTEMEN = {
   1: "BPH", 2: "ORESBUD", 3: "PENDIDIKAN", 4: "Pengembangan Organisasi", 5: "AGAMA", 6: "KOMINFO"
@@ -28,8 +35,8 @@ export default function AbsensiPage() {
   const [officialName, setOfficialName] = useState('')
   const [activeEvent, setActiveEvent] = useState<any>(null)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [isMobile, setIsMobile] = useState(true)
   
-  // State untuk Setup Profil
   const [needsSetup, setNeedsSetup] = useState(false)
   const [selectedDept, setSelectedDept] = useState<number>(0)
   const [selectedName, setSelectedName] = useState('')
@@ -38,18 +45,21 @@ export default function AbsensiPage() {
   const router = useRouter()
 
   useEffect(() => {
+    const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent : '';
+    const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+    setIsMobile(mobileRegex.test(userAgent));
+
     const fetchInitialData = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
 
       if (user) {
-        // Cek apakah profilnya sudah lengkap (punya department_id)
         const { data: profile } = await supabase.from('profiles').select('department_id, full_name').eq('id', user.id).single()
         
         if (!profile?.department_id) {
-          setNeedsSetup(true) // Munculkan layar pilih nama
+          setNeedsSetup(true)
         } else {
-          setOfficialName(profile.full_name) // Gunakan nama resmi dari database
+          setOfficialName(profile.full_name)
         }
       }
 
@@ -77,14 +87,12 @@ export default function AbsensiPage() {
     }
   }, [])
 
-  // --- FUNGSI SIMPAN PROFIL PERTAMA KALI ---
   const handleSaveProfile = async () => {
     if (!selectedDept || !selectedName) {
       setMessage({ type: 'error', text: 'Pilih Departemen dan Nama Anda!' })
       return
     }
     setLoading(true)
-    // Kunci nama asli dan departemen ke akun Google ini
     const { error } = await supabase.from('profiles')
       .update({ department_id: selectedDept, full_name: selectedName })
       .eq('id', user.id)
@@ -99,7 +107,6 @@ export default function AbsensiPage() {
     setLoading(false)
   }
 
-  // --- FUNGSI ABSENSI ---
   const handleAbsen = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return
     setLoading(true)
@@ -153,9 +160,6 @@ export default function AbsensiPage() {
     }
   }
 
-  // ==========================================
-  // LAYAR 1: JIKA PROFIL BELUM LENGKAP
-  // ==========================================
   if (needsSetup) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center px-6 py-12 font-sans">
@@ -207,9 +211,6 @@ export default function AbsensiPage() {
     )
   }
 
-  // ==========================================
-  // LAYAR 2: HALAMAN ABSENSI UTAMA (SUDAH LENGKAP)
-  // ==========================================
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans pb-32 md:items-center">
       <div className="w-full max-w-md bg-white min-h-screen shadow-sm relative">
@@ -224,7 +225,6 @@ export default function AbsensiPage() {
               )}
               <div className="text-white">
                 <p className="text-xs text-blue-200">Halo,</p>
-                {/* Menampilkan Nama Resmi HMBD, bukan nama Google lagi */}
                 <p className="font-bold text-sm tracking-wide line-clamp-1">{officialName || 'Mahasiswa'}</p>
               </div>
             </div>
@@ -282,12 +282,19 @@ export default function AbsensiPage() {
         </div>
 
         <div className="fixed md:absolute bottom-0 w-full max-w-md bg-white border-t border-gray-100 p-6 pb-8 shadow-[0_-10px_40px_rgb(0,0,0,0.05)] rounded-t-3xl z-50">
-          <label className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-lg transition-transform active:scale-95 cursor-pointer shadow-lg
-            ${loading || !activeEvent ? 'bg-gray-100 text-gray-400 shadow-none pointer-events-none' : 'bg-blue-600 text-white shadow-blue-600/30 hover:bg-blue-700'}`}>
-            <ScanFace size={22} className={loading ? 'animate-pulse' : ''} />
-            {loading ? 'Memproses...' : 'Scan Wajah & Absen'}
-            <input type="file" accept="image/*" capture="user" className="hidden" onChange={handleAbsen} disabled={loading || !activeEvent} />
-          </label>
+          {/* LOGIKA BLOKIR LAPTOP DENGAN DAFTAR PUTIH ADMIN */}
+          {(!isMobile && !ADMIN_EMAILS.includes(user?.email)) ? (
+            <div className="w-full py-4 text-center bg-red-50 text-red-600 rounded-2xl font-bold text-sm border border-red-100">
+              ⚠️ Absensi hanya dapat dilakukan melalui Smartphone.
+            </div>
+          ) : (
+            <label className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-lg transition-transform active:scale-95 cursor-pointer shadow-lg
+              ${loading || !activeEvent ? 'bg-gray-100 text-gray-400 shadow-none pointer-events-none' : 'bg-blue-600 text-white shadow-blue-600/30 hover:bg-blue-700'}`}>
+              <ScanFace size={22} className={loading ? 'animate-pulse' : ''} />
+              {loading ? 'Memproses...' : 'Scan Wajah & Absen'}
+              <input type="file" accept="image/*" capture="user" className="hidden" onChange={handleAbsen} disabled={loading || !activeEvent} />
+            </label>
+          )}
         </div>
       </div>
     </div>
